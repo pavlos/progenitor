@@ -15,8 +15,11 @@ Jeweler::Tasks.new do |gem|
   gem.name = "progenitor"
   gem.homepage = "http://github.com/pavlos/progenitor"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = "Extremely lightweight yet full featured factory gem."
+  gem.description = "Progenitor is a lightweight gem for building factories, especially useful for testing, but
+                     there is no reason why it can't be used in application code.  Unlike Factory Girl, Progenitor
+                     makes no assumption that products are instances of ActiveRecord::Base - it can be used to produce\
+                     objects of any type."
   gem.email = "paul.hieromnimon@gmail.com"
   gem.authors = ["Paul Hieromnimon"]
   # Include your dependencies below. Runtime dependencies are required when using your gem,
