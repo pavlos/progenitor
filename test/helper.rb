@@ -9,10 +9,15 @@ rescue Bundler::BundlerError => e
 end
 require 'test/unit'
 require 'shoulda'
+require 'mocha'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
-require 'progenitor'
+require 'progenitor/factory'
+require 'progenitor/sequence'
+require 'progenitor/no_such_factory_exception'
+require 'foo'
+require 'foo_factory'
 
 class Test::Unit::TestCase
 end
