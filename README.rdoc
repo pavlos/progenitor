@@ -1,6 +1,159 @@
 = progenitor
 
-Description goes here.
+Progenitor is a factory gem.  It can be used as a replacement for fixtures, or just as a unified interface for factories
+in application code.  Unlike Factory Girl, it doesn't assume your products inherit from ActiveRecord::Base, therefore
+it can be used with objects of any type.
+
+Also, it is without the bloat of Factory Girl (well under 100 lines of code, not including tests) because I don't try to
+create a fancy DSL for assignments when a simple = operator will do the same job.
+
+Finally, you can use Progenitor alongside Factory Girl so that you don't have to replace all your factories right away.
+Just be to load it after Factory Girl.  See the examples for details.
+
+== Examples
+=== Loading Progenitor
+You need to load Progenitor and then load the individual factories.
+
+<tt>
+# in Gemfile
+gem 'progenitor'
+</tt>
+
+If you're running a Rails app, add the following:
+
+<tt>
+# in test/test_helper.rb
+#load progenitor
+require 'progenitor/all'
+#then load each of the individual factories that you create, for example:
+require 'factories/foo_factory'
+require 'factories/bar_factory'
+require 'factories/factory_that_makes_miniature_models_of_factories_factory'
+</tt>
+
+=== Defining Factories
+Let's say we want to create a factory for making instances of Foo
+<tt>
+# in test/factories/foo_factory.rb
+class FooFactory < Progenitor::Factory
+
+  #simplest case
+  create :foo do
+    Foo.new
+  end
+
+end
+</tt>
+
+Then, in a test or somewhere, call <tt>Factory :foo</tt> to produce an instance of Foo.
+
+=== Sequences
+You can use a sequence if you need to create a persistent object or something else that needs a serial number or ID.
+
+Sequence can be used in concurrent environments.  It synchronizes calls on a Mutex, so it is safe for preemptive
+multitasking, and fail-fast when using cooperative multitasking (although all its methods release locks before
+accepting blocks, so it would be very hard to try to reacquire the same lock, but if you somehow managed to, you'd get
+bailed out by ThreadError)
+
+<tt>
+# in test/factories/foo_factory.rb
+class FooFactory < Progenitor::Factory
+
+  # Instantiate a Sequence and assign to a class-instance variable in your factory class
+  # IMPORTANT: do not instantiate the sequence inside the block you pass to create, or it will get reset each time you
+  # call your factory
+  @i = Progenitor::Sequence.new
+  create :numbered_foo do
+    foo = Foo.new
+    foo.id = @i.next_int # call next_int to get a sequence number
+    foo
+  end
+
+end
+
+foo0 = Factory :numbered_foo
+foo0.id #=> 0
+foo1 = Factory :numbered_foo
+foo1.id #=> 1
+</tt>
+
+You can also start sequences at whatever value you desire, and there's a convenience method for when you need the same
+sequence number for multiple fields
+
+<tt>
+# in test/factories/foo_factory.rb
+class FooFactory < Progenitor::Factory
+
+  @i = Progenitor::Sequence.new 1 #the default starting point is 0, but you can set whatever you want
+  create :numbered_foo do
+    foo = Foo.new
+    @i.in_sequence do |n|
+      foo.id = n
+      foo.name = "name#{n}"
+    end
+    foo
+  end
+
+end
+
+foo1 = Factory :numbered_foo
+foo1.id #=> 1
+foo1.name #=> "name1"
+
+foo2 = Factory :numbered_foo
+foo2.id #=> 2
+foo2.name #=> "name12"
+</tt>
+
+=== Passing Arguments to Factories
+We can get fancy and pass arguments to our factories.  If you're using Ruby 1.9 you can even specify default arguments.
+<tt>
+# in test/factories/foo_factory.rb
+class FooFactory < Progenitor::Factory
+
+  #passing arguments
+  create :foo do |bar, baz=3|
+    foo = Foo.new
+    foo.bar = bar
+    foo.baz = baz
+    foo
+  end
+
+end
+
+foo = Factory :foo, "something"
+foo.bar #=> "something"
+foo.baz #=> 3
+</tt>
+
+You can even pass blocks to your factories:
+<tt>
+# in test/factories/foo_factory.rb
+class FooFactory < Progenitor::Factory
+
+  #passing a block
+  create :foo do |arg, &block|
+    foo = Foo.new
+    block.call "in a block"
+    foo
+  end
+
+end
+
+foo = Factory :foo, :some_arg do |say_what|
+  puts say_what
+end
+
+# "in a block" will be displayed
+</tt>
+
+=== More Examples
+See test/test_progenitor.rb for more examples
+
+== Factory Girl integration
+If you'd ever want to, you can use Progenitor with Factory Girl.  Just make sure that Factory Girl is loaded first,
+then when you call <tt>Factory :something</tt>, Progenitor will first see if it knows how to create <tt>:something</tt>
+and if not, will delegate to Factory Girl
 
 == Contributing to progenitor
  
