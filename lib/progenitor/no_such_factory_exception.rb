@@ -1,0 +1,1 @@
+class NoSuchFactoryException < ArgumentError; end
