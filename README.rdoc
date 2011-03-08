@@ -14,36 +14,32 @@ Just be to load it after Factory Girl.  See the examples for details.
 === Loading Progenitor
 You need to load Progenitor and then load the individual factories.
 
-<tt>
-# in Gemfile
-gem 'progenitor'
-</tt>
+  # in Gemfile
+  gem 'progenitor'
+
 
 If you're running a Rails app, add the following:
 
-<tt>
-# in test/test_helper.rb
-#load progenitor
-require 'progenitor/all'
-#then load each of the individual factories that you create, for example:
-require 'factories/foo_factory'
-require 'factories/bar_factory'
-require 'factories/factory_that_makes_miniature_models_of_factories_factory'
-</tt>
+  # in test/test_helper.rb
+  #load progenitor
+  require 'progenitor/all'
+  #then load each of the individual factories that you create, for example:
+  require 'factories/foo_factory'
+  require 'factories/bar_factory'
+  require 'factories/factory_that_makes_miniature_models_of_factories_factory'
 
 === Defining Factories
 Let's say we want to create a factory for making instances of Foo
-<tt>
-# in test/factories/foo_factory.rb
-class FooFactory < Progenitor::Factory
 
-  #simplest case
-  create :foo do
-    Foo.new
+  # in test/factories/foo_factory.rb
+  class FooFactory < Progenitor::Factory
+
+    #simplest case
+    create :foo do
+      Foo.new
+    end
+
   end
-
-end
-</tt>
 
 Then, in a test or somewhere, call <tt>Factory :foo</tt> to produce an instance of Foo.
 
@@ -55,97 +51,91 @@ multitasking, and fail-fast when using cooperative multitasking (although all it
 accepting blocks, so it would be very hard to try to reacquire the same lock, but if you somehow managed to, you'd get
 bailed out by ThreadError)
 
-<tt>
-# in test/factories/foo_factory.rb
-class FooFactory < Progenitor::Factory
+  # in test/factories/foo_factory.rb
+  class FooFactory < Progenitor::Factory
 
-  # Instantiate a Sequence and assign to a class-instance variable in your factory class
-  # IMPORTANT: do not instantiate the sequence inside the block you pass to create, or it will get reset each time you
-  # call your factory
-  @i = Progenitor::Sequence.new
-  create :numbered_foo do
-    foo = Foo.new
-    foo.id = @i.next_int # call next_int to get a sequence number
-    foo
+    # Instantiate a Sequence and assign to a class-instance variable in your factory class
+    # IMPORTANT: do not instantiate the sequence inside the block you pass to create, or it will get reset each time you
+    # call your factory
+    @i = Progenitor::Sequence.new
+    create :numbered_foo do
+      foo = Foo.new
+      foo.id = @i.next_int # call next_int to get a sequence number
+      foo
+    end
+
   end
 
-end
-
-foo0 = Factory :numbered_foo
-foo0.id #=> 0
-foo1 = Factory :numbered_foo
-foo1.id #=> 1
-</tt>
+  foo0 = Factory :numbered_foo
+  foo0.id #=> 0
+  foo1 = Factory :numbered_foo
+  foo1.id #=> 1
 
 You can also start sequences at whatever value you desire, and there's a convenience method for when you need the same
 sequence number for multiple fields
 
-<tt>
-# in test/factories/foo_factory.rb
-class FooFactory < Progenitor::Factory
+  # in test/factories/foo_factory.rb
+  class FooFactory < Progenitor::Factory
 
-  @i = Progenitor::Sequence.new 1 #the default starting point is 0, but you can set whatever you want
-  create :numbered_foo do
-    foo = Foo.new
-    @i.in_sequence do |n|
-      foo.id = n
-      foo.name = "name#{n}"
+    @i = Progenitor::Sequence.new 1 #the default starting point is 0, but you can set whatever you want
+    create :numbered_foo do
+      foo = Foo.new
+      @i.in_sequence do |n|
+        foo.id = n
+        foo.name = "name#{n}"
+      end
+      foo
     end
-    foo
+
   end
 
-end
+  foo1 = Factory :numbered_foo
+  foo1.id #=> 1
+  foo1.name #=> "name1"
 
-foo1 = Factory :numbered_foo
-foo1.id #=> 1
-foo1.name #=> "name1"
-
-foo2 = Factory :numbered_foo
-foo2.id #=> 2
-foo2.name #=> "name12"
-</tt>
+  foo2 = Factory :numbered_foo
+  foo2.id #=> 2
+  foo2.name #=> "name12"
 
 === Passing Arguments to Factories
 We can get fancy and pass arguments to our factories.  If you're using Ruby 1.9 you can even specify default arguments.
-<tt>
-# in test/factories/foo_factory.rb
-class FooFactory < Progenitor::Factory
 
-  #passing arguments
-  create :foo do |bar, baz=3|
-    foo = Foo.new
-    foo.bar = bar
-    foo.baz = baz
-    foo
+  # in test/factories/foo_factory.rb
+  class FooFactory < Progenitor::Factory
+
+    #passing arguments
+    create :foo do |bar, baz=3|
+      foo = Foo.new
+      foo.bar = bar
+      foo.baz = baz
+      foo
+    end
+
   end
 
-end
-
-foo = Factory :foo, "something"
-foo.bar #=> "something"
-foo.baz #=> 3
-</tt>
+  foo = Factory :foo, "something"
+  foo.bar #=> "something"
+  foo.baz #=> 3
 
 You can even pass blocks to your factories:
-<tt>
-# in test/factories/foo_factory.rb
-class FooFactory < Progenitor::Factory
 
-  #passing a block
-  create :foo do |arg, &block|
-    foo = Foo.new
-    block.call "in a block"
-    foo
+  # in test/factories/foo_factory.rb
+  class FooFactory < Progenitor::Factory
+
+    #passing a block
+    create :foo do |arg, &block|
+      foo = Foo.new
+      block.call "in a block"
+      foo
+    end
+
   end
 
-end
+  foo = Factory :foo, :some_arg do |say_what|
+    puts say_what
+  end
 
-foo = Factory :foo, :some_arg do |say_what|
-  puts say_what
-end
-
-# "in a block" will be displayed
-</tt>
+  # "in a block" will be displayed
 
 === More Examples
 See test/test_progenitor.rb for more examples
@@ -156,7 +146,7 @@ then when you call <tt>Factory :something</tt>, Progenitor will first see if it 
 and if not, will delegate to Factory Girl
 
 == Contributing to progenitor
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
 * Fork the project
